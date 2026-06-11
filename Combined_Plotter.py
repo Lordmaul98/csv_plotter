@@ -60,12 +60,11 @@ def dichte_wasser(T):
     return 999.842 - 0.0624 * T - 0.00366 * T**2
 
 def berechne_kv(Q_lh, dp_bar, T_celsius):
-    Q     = np.asarray(Q_lh/1000,  dtype=float)          # [l/h]
-    rho   = dichte_wasser(np.asarray(T_celsius, dtype=float))
-    rho_r = rho / 999.0                              # [-]
-    dp    = np.abs(np.asarray(dp_bar, dtype=float))  # [bar]
+    Q   = np.asarray(Q_lh, dtype=float) / 1000.0        # l/h → m³/h
+    rho = dichte_wasser(np.asarray(T_celsius, dtype=float))  # kg/m³
+    dp  = np.abs(np.asarray(dp_bar, dtype=float))        # bar
     with np.errstate(invalid="ignore", divide="ignore"):
-        return np.where(dp > 0.001, Q * np.sqrt(rho_r / (dp)), np.nan)
+        return np.where(dp > 0.001, Q * np.sqrt(rho / (dp * 1000.0)), np.nan)
 
 # ================================================================
 
