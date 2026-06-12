@@ -10,15 +10,15 @@ import glob
 # KONFIGURATION – hier anpassen
 # ================================================================
 
-TXT_DATEI  = r"J:\ECS\02_Projekte\01_Projektentwicklung\2024-01_ÖgP_GenSYS\05_Daten\KW_Mischventil\2026_06_11_Daten\Tst1_STAD50_U05.txt"
-DAT_ORDNER = r"J:\ECS\02_Projekte\01_Projektentwicklung\2024-01_ÖgP_GenSYS\05_Daten\KW_Mischventil\2026_06_11_Daten"
+TXT_DATEI  = r"J:\ECS\02_Projekte\01_Projektentwicklung\2024-01_ÖgP_GenSYS\05_Daten\KW_Mischventil\2026_06_12_Daten\TST1_STAD50_1_25U.txt"
+DAT_ORDNER = r"J:\ECS\02_Projekte\01_Projektentwicklung\2024-01_ÖgP_GenSYS\05_Daten\KW_Mischventil\2026_06_12_Daten"
 
 # Zeitbereich Gesamtdiagramm – None = automatisch
-X_START = "2026-06-11 10:06:00"
-X_ENDE  = "2026-06-11 12:10:00"
+X_START = "2026-06-12 09:11:00"
+X_ENDE  = "2026-06-12 11:10:00"
 
 # Zeitversatz DAT in Minuten (0 = keine Korrektur, DAT ist bereits Lokalzeit)
-DAT_OFFSET_MIN = 2.1
+DAT_OFFSET_MIN = 3.7
 # Zeitversatz der Segmente in Minuten (verschiebt alle Segmentzeitgrenzen)
 SEG_OFFSET_MIN = 2.1
 # ================================================================
@@ -26,17 +26,17 @@ SEG_OFFSET_MIN = 2.1
 # Format: ("Name", "Start", "Ende")
 # ================================================================
 SEGMENTE = [
-    ("Seg 1",  "2026-06-11 10:07:00", "2026-06-11 10:16:00"),
-    ("Seg 2",  "2026-06-11 10:18:00", "2026-06-11 10:26:00"),
-    ("Seg 3",  "2026-06-11 10:28:00", "2026-06-11 10:36:00"),
-    ("Seg 4",  "2026-06-11 10:38:00", "2026-06-11 10:46:00"),
-    ("Seg 5",  "2026-06-11 10:48:00", "2026-06-11 10:57:00"),
-    ("Seg 6",  "2026-06-11 10:59:00", "2026-06-11 11:08:00"),
-    ("Seg 7",  "2026-06-11 11:09:00", "2026-06-11 11:18:00"),
-    ("Seg 8",  "2026-06-11 11:20:00", "2026-06-11 11:29:00"),
-    ("Seg 9",  "2026-06-11 11:31:00", "2026-06-11 11:39:00"),
-    ("Seg 10", "2026-06-11 11:41:00", "2026-06-11 11:50:00"),
-    ("Seg 11", "2026-06-11 11:51:00", "2026-06-11 12:00:00"),
+    ("Seg  1", "2026-06-12 09:10:00", "2026-06-12 09:19:30"),  # 0% (629s)
+    ("Seg  2", "2026-06-12 09:21:00", "2026-06-12 09:30:00"),  # 10% (620s)
+    ("Seg  3", "2026-06-12 09:31:00", "2026-06-12 09:40:00"),  # 20% (617s)
+    ("Seg  4", "2026-06-12 09:41:00", "2026-06-12 09:50:00"),  # 30% (613s)
+    ("Seg  5", "2026-06-12 09:51:30", "2026-06-12 09:58:00"),  # 40% (611s)
+    ("Seg  6", "2026-06-12 10:02:00", "2026-06-12 10:10:00"),  # 50% (616s)
+    ("Seg  7", "2026-06-12 10:13:00", "2026-06-12 10:23:00"),  # 60% (765s)
+    ("Seg  8", "2026-06-12 10:25:00", "2026-06-12 10:34:00"),  # 70% (607s)
+    ("Seg  9", "2026-06-12 10:35:00", "2026-06-12 10:44:00"),  # 80% (605s)
+    ("Seg 10", "2026-06-12 10:45:00", "2026-06-12 10:55:00"),  # 90% (608s)
+    ("Seg 11", "2026-06-12 10:56:00", "2026-06-12 11:05:00"),  # 100% (610s)
 ]
 
 # Höhe der Mittelwert-Blöcke (0.0=unten, 1.0=oben)
@@ -127,7 +127,46 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     print("\n=== Daten laden ===")
     df_csv = lade_txt(txt_pfad)
     df_dat = lade_dat(dat_ordner)
+    if not df_dat.empty:
+        print(f"  DAT Zeitbereich: {df_dat['Date'].min()} – {df_dat['Date'].max()}")
+    print(f"  TXT Zeitbereich: {df_csv['Zeitstempel'].min()} – {df_csv['Zeitstempel'].max()}")
+    # Umschaltzeitpunkte Fr_Mix_CL_AI automatisch erkennen
+    if not df_dat.empty and "Fr_Mix_CL_AI [%]" in df_dat.columns:
+        print("\n=== Umschaltzeitpunkte Fr_Mix_CL_AI ===")
+        zielwerte = list(range(0, 101, 10))  # [0, 10, 20, ..., 100]
+        toleranz = 3.0
 
+        datum = df_dat["Date"].iloc[0].strftime("%Y-%m-%d")
+        segmente_ausgabe = []
+        seg_nr = 1
+
+        for ziel in zielwerte:
+            maske = (df_dat["Fr_Mix_CL_AI [%]"] >= ziel - toleranz) & \
+                    (df_dat["Fr_Mix_CL_AI [%]"] <= ziel + toleranz)
+            punkte = df_dat.loc[maske, "Date"].sort_values().reset_index(drop=True)
+            if len(punkte) == 0:
+                continue
+
+            luecke = punkte.diff().dt.total_seconds() > 30
+            block_starts = punkte[luecke | (punkte.index == 0)]
+            block_ends = punkte[luecke.shift(-1, fill_value=True)]
+
+            # Nur den längsten Block pro Zielwert verwenden
+            dauern = [(ende - start).total_seconds()
+                      for start, ende in zip(block_starts, block_ends)]
+            idx_max = np.argmax(dauern)
+            start = list(block_starts)[idx_max]
+            ende = list(block_ends)[idx_max]
+            segmente_ausgabe.append(
+                f'    ("Seg {seg_nr:2d}", "{datum} {start.strftime("%H:%M:%S")}",'
+                f' "{datum} {ende.strftime("%H:%M:%S")}"),  # {ziel}% ({dauern[idx_max]:.0f}s)'
+            )
+            seg_nr += 1
+
+        print("\nSEGMENTE = [")
+        for zeile in segmente_ausgabe:
+            print(zeile)
+        print("]")
     x0 = pd.Timestamp(X_START) if X_START else df_csv["Zeitstempel"].min()
     x1 = pd.Timestamp(X_ENDE)  if X_ENDE  else df_csv["Zeitstempel"].max()
 
@@ -203,7 +242,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     l_Q, = ax1.plot(df_csv["Zeitstempel"], df_csv["Durchfluss"],
                     color=FARBE_DURCHFLUSS, lw=0.9, label="Durchfluss [l/h]", zorder=3)
 
-    # Y2 links versetzt: Druck [bar / bara]
+    # Y2 links versetzt: Druck [barg / bara]
     ax2 = ax1.twinx()
     ax2.spines["left"].set_position(("outward", 72))
     ax2.yaxis.set_label_position("left")
@@ -236,10 +275,8 @@ def plot_kombiniert(txt_pfad, dat_ordner):
             for c in ["p_HF_i_CL_AI [bara]","p_HF_o_CL_AI [bara]","dp_HF_bar"]:
                 if c in seg.columns: y2v.extend(seg[c].dropna())
         if y2v:
-            y2lo, y2hi = min(y2v), max(y2v); y2r = y2hi - y2lo
-            if y1r > 0 and y2r > 0:
-                sc = y1r / y2r
-                ax2.set_ylim(y2lo - y1lo / sc, y2lo - y1lo / sc + (y1hi + y1r * 0.35 - y1lo) / sc)
+            y2hi = max(y2v)
+            ax2.set_ylim(0, y2hi * 1.1)
 
     # Y4 rechts außen: Kv [m³/h]
     ax4 = ax1.twinx()
@@ -329,7 +366,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     ax_kv.set_facecolor("#d0d0d0")
 
     punkte = []
-    for i, (name, s0, s1, seg) in enumerate(segs[:10]):
+    for i, (name, s0, s1, seg) in enumerate(segs[:11]):
         if "Kv" in seg.columns and "Fr_Mix_CL_AI [%]" in seg.columns and len(seg) > 0:
             fr_m = 100 - seg["Fr_Mix_CL_AI [%]"].mean()
             kv_m = np.nanmean(seg["Kv"].values)
@@ -360,7 +397,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     ax_kv.set_ylabel("Kv-Wert [m³/h]", color="#1565C0", fontsize=11)
     ax_kv.tick_params(axis="y", labelcolor="#1565C0")
     ax_kv.grid(True, ls="-", color="white", alpha=0.5, lw=0.5)
-    ax_kv.set_title("Kv-Kennlinie Mischventil (Seg. 1–10)", fontsize=12, pad=10)
+    ax_kv.set_title("Kv-Kennlinie Kühlwasser-Mischventil", fontsize=12, pad=10)
     ax_kv.legend(fontsize=9, loc="upper left")
     plt.tight_layout()
 
