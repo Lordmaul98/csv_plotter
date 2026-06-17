@@ -10,40 +10,41 @@ import glob
 # KONFIGURATION – hier anpassen
 # ================================================================
 
-TXT_DATEI  = r"J:\ECS\02_Projekte\01_Projektentwicklung\2024-01_ÖgP_GenSYS\05_Daten\KW_Mischventil\2026_06_12_Daten\TST1_STAD50_1_25U.txt"
-DAT_ORDNER = r"J:\ECS\02_Projekte\01_Projektentwicklung\2024-01_ÖgP_GenSYS\05_Daten\KW_Mischventil\2026_06_12_Daten"
+TXT_DATEI  = r"J:\ECS\02_Projekte\01_Projektentwicklung\2024-01_ÖgP_GenSYS\05_Daten\KW_Mischventil\2026_06_15_Daten\TST1_STAD50_1_25U.txt"
+DAT_ORDNER = r"J:\ECS\02_Projekte\01_Projektentwicklung\2024-01_ÖgP_GenSYS\05_Daten\KW_Mischventil\2026_06_15_Daten"
 
 # Zeitbereich Gesamtdiagramm – None = automatisch
-X_START = "2026-06-12 09:11:00"
-X_ENDE  = "2026-06-12 11:10:00"
+X_START = "2026-06-15 14:56:00"
+X_ENDE  = "2026-06-15 17:03:00"
 
-# Zeitversatz DAT in Minuten (0 = keine Korrektur, DAT ist bereits Lokalzeit)
-DAT_OFFSET_MIN = 3.7
+# Zeitversatz DAT in Minuten
+DAT_OFFSET_MIN = 124.3
 # Zeitversatz der Segmente in Minuten (verschiebt alle Segmentzeitgrenzen)
-SEG_OFFSET_MIN = 2.1
+SEG_OFFSET_MIN = 0
+
 # ================================================================
 # SEGMENTE – manuelle Zeitbereiche für Kv-Berechnung
 # Format: ("Name", "Start", "Ende")
 # ================================================================
 SEGMENTE = [
-    ("Seg  1", "2026-06-12 09:10:00", "2026-06-12 09:19:30"),  # 0% (629s)
-    ("Seg  2", "2026-06-12 09:21:00", "2026-06-12 09:30:00"),  # 10% (620s)
-    ("Seg  3", "2026-06-12 09:31:00", "2026-06-12 09:40:00"),  # 20% (617s)
-    ("Seg  4", "2026-06-12 09:41:00", "2026-06-12 09:50:00"),  # 30% (613s)
-    ("Seg  5", "2026-06-12 09:51:30", "2026-06-12 09:58:00"),  # 40% (611s)
-    ("Seg  6", "2026-06-12 10:02:00", "2026-06-12 10:10:00"),  # 50% (616s)
-    ("Seg  7", "2026-06-12 10:13:00", "2026-06-12 10:23:00"),  # 60% (765s)
-    ("Seg  8", "2026-06-12 10:25:00", "2026-06-12 10:34:00"),  # 70% (607s)
-    ("Seg  9", "2026-06-12 10:35:00", "2026-06-12 10:44:00"),  # 80% (605s)
-    ("Seg 10", "2026-06-12 10:45:00", "2026-06-12 10:55:00"),  # 90% (608s)
-    ("Seg 11", "2026-06-12 10:56:00", "2026-06-12 11:05:00"),  # 100% (610s)
+    ("Seg  1", "2026-06-15 14:55:00", "2026-06-15 15:06:30"),  # 0% (642s)
+    ("Seg  2", "2026-06-15 15:08:00", "2026-06-15 15:17:00"),  # 10% (622s)
+    ("Seg  3", "2026-06-15 15:18:30", "2026-06-15 15:28:00"),  # 20% (669s)
+    ("Seg  4", "2026-06-15 15:29:40", "2026-06-15 15:38:00"),  # 30% (613s)
+    ("Seg  5", "2026-06-15 15:40:00", "2026-06-15 15:49:00"),  # 40% (615s)
+    ("Seg  6", "2026-06-15 15:50:00", "2026-06-15 15:59:00"),  # 50% (608s)
+    ("Seg  7", "2026-06-15 16:00:30", "2026-06-15 16:10:30"),  # 60% (694s)
+    ("Seg  8", "2026-06-15 16:12:00", "2026-06-15 16:24:00"),  # 70% (831s)
+    ("Seg  9", "2026-06-15 16:26:00", "2026-06-15 16:35:00"),  # 80% (625s)
+    ("Seg 10", "2026-06-15 16:36:30", "2026-06-15 16:45:00"),  # 90% (601s)
+    ("Seg 11", "2026-06-15 16:46:30", "2026-06-15 16:55:00"),  # 100% (605s)
 ]
 
 # Höhe der Mittelwert-Blöcke (0.0=unten, 1.0=oben)
-BLOCK_OFFSET = 0.5
+BLOCK_OFFSET = 0.25
 BLOCK_OFFSET_SEG = {
-    0: None, 1: None, 2: None, 3: None, 4: None,
-    5: None, 6: None, 7: None, 8: None, 9: None, 10: None,
+    1: None, 2: None, 3: None, 4: None, 5: None,
+    6: None, 7: None, 8: 0.45, 9: 0.45, 10: 0.45, 11: 0.45,
 }
 
 # ================================================================
@@ -66,7 +67,7 @@ def dichte_wasser(T):
     return 999.842 - 0.0624 * T - 0.00366 * T**2
 
 def berechne_kv(Q_lh, dp_bar, T_celsius):
-    Q   = np.asarray(Q_lh, dtype=float) / 1000.0        # l/h → m³/h
+    Q   = np.asarray(Q_lh, dtype=float)        # l/h → m³/h
     rho = dichte_wasser(np.asarray(T_celsius, dtype=float))  # kg/m³
     dp  = np.abs(np.asarray(dp_bar, dtype=float))        # bar
     with np.errstate(invalid="ignore", divide="ignore"):
@@ -80,6 +81,7 @@ def lade_txt(pfad):
     df.columns = ["Nr", "Datum", "Zeit", "Durchfluss", "Temperatur"]
     for c in ["Durchfluss", "Temperatur"]:
         df[c] = pd.to_numeric(df[c], errors="coerce")
+    df["Durchfluss"] = df["Durchfluss"] / 1000.0
     df = df.assign(
         Differenzdruck_bar = np.nan,  # TXT hat keinen Differenzdruck
         Zeitstempel = pd.to_datetime(df["Datum"] + " " + df["Zeit"],
@@ -102,15 +104,22 @@ def lade_dat(ordner):
     for pfad in dateien:
         print(f"    Lade: {os.path.basename(pfad)}")
         try:
-            alle = pd.read_csv(pfad, encoding="cp1252", skiprows=4,
+            # Kopfzeilen automatisch finden (Zeile mit "Date" als erste Spalte)
+            skip = 0
+            with open(pfad, encoding="cp1252") as f:
+                for i, line in enumerate(f):
+                    if line.startswith("Date\t") or line.startswith("Date "):
+                        skip = i
+                        break
+            alle = pd.read_csv(pfad, encoding="cp1252", skiprows=skip,
                                sep="\t", nrows=0).columns.tolist()
             vorh = [c for c in COLS if c in alle]
-            df   = pd.read_csv(pfad, encoding="cp1252", skiprows=4,
-                               sep="\t", usecols=vorh)
+            df = pd.read_csv(pfad, encoding="cp1252", skiprows=skip,
+                             sep="\t", usecols=vorh)
             df   = df.assign(
                 Date      = pd.to_datetime(df["Date"], errors="coerce")
                             + pd.Timedelta(minutes=DAT_OFFSET_MIN),
-                dp_HF_bar = np.abs(df["p_HF_o_CL_AI [bara]"] - df["p_HF_i_CL_AI [bara]"])
+                dp_HF_bar = np.abs(df["p_HF_i_CL_AI [bara]"] - df["p_HF_o_CL_AI [bara]"])
             )
             df = df.dropna(subset=["Date"]).sort_values("Date").reset_index(drop=True)
             print(f"      → {len(df)} Zeilen | {df['Date'].min()} – {df['Date'].max()}")
@@ -224,9 +233,15 @@ def plot_kombiniert(txt_pfad, dat_ordner):
         segs_mit_kv.append((name, s0, s1, seg))
 
         fr_mean = (100 - seg["Fr_Mix_CL_AI [%]"].mean()) if "Fr_Mix_CL_AI [%]" in seg.columns else float("nan")
+        p_i_mean = seg["p_HF_i_CL_AI [bara]"].mean() if "p_HF_i_CL_AI [bara]" in seg.columns else float("nan")
+        p_o_mean = seg["p_HF_o_CL_AI [bara]"].mean() if "p_HF_o_CL_AI [bara]" in seg.columns else float("nan")
+        rho_mean = dichte_wasser(T_interp.mean())
         print(f"  {name} ({s0.strftime('%H:%M')}–{s1.strftime('%H:%M')}): "
-              f"Q̄={Q_interp.mean():.0f} l/h | dp̄={seg['dp_HF_bar'].mean():.3f} bar | "
-              f"T̄={T_interp.mean():.1f}°C | Öffnung={fr_mean:.1f}% | kv̄={np.nanmean(kv):.4f} m³/h")
+              f"Q̄={Q_interp.mean():.3f} m³/h | "
+              f"p_HF_i_CL={p_i_mean:.3f} bara | p_HF_o_CL={p_o_mean:.3f} bara | "
+              f"dp̄={seg['dp_HF_bar'].mean():.3f} bar | "
+              f"T̄={T_interp.mean():.1f}°C | ρ={rho_mean:.2f} kg/m³ | "
+              f"Öffnung={fr_mean:.1f}% | kv̄={np.nanmean(kv):.3f} m³/h")
 
     segs = segs_mit_kv
 
@@ -237,10 +252,10 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     ax1.set_facecolor("#d0d0d0")
 
     # Y1 links: Durchfluss [l/h]
-    ax1.set_ylabel("Durchfluss [l/h]", color=FARBE_DURCHFLUSS, fontsize=10)
+    ax1.set_ylabel("Durchfluss [m³/h]", color=FARBE_DURCHFLUSS, fontsize=10)
     ax1.tick_params(axis="y", labelcolor=FARBE_DURCHFLUSS)
     l_Q, = ax1.plot(df_csv["Zeitstempel"], df_csv["Durchfluss"],
-                    color=FARBE_DURCHFLUSS, lw=0.9, label="Durchfluss [l/h]", zorder=3)
+                    color=FARBE_DURCHFLUSS, lw=0.9, label="Durchfluss [m³/h]", zorder=3)
 
     # Y2 links versetzt: Druck [barg / bara]
     ax2 = ax1.twinx()
@@ -253,14 +268,14 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     l_dp_csv = None
     l_pi = l_po = l_dp_dat = None
     if not df_dat.empty:
-        if "p_HF_i_CL_AI [bara]" in df_dat.columns:
-            l_pi, = ax2.plot(df_dat["Date"], df_dat["p_HF_i_CL_AI [bara]"],
-                             color=FARBE_P_I, lw=1.0, ls="--", zorder=4,
-                             label="p_HF_i Eingang [bara]")
         if "p_HF_o_CL_AI [bara]" in df_dat.columns:
-            l_po, = ax2.plot(df_dat["Date"], df_dat["p_HF_o_CL_AI [bara]"],
-                             color=FARBE_P_O, lw=1.0, ls="--", zorder=4,
+            l_pi, = ax2.plot(df_dat["Date"], df_dat["p_HF_o_CL_AI [bara]"],
+                             color=FARBE_P_I, lw=1.0, ls="--", zorder=4,
                              label="p_HF_o Ausgang [bara]")
+        if "p_HF_i_CL_AI [bara]" in df_dat.columns:
+            l_po, = ax2.plot(df_dat["Date"], df_dat["p_HF_i_CL_AI [bara]"],
+                             color=FARBE_P_O, lw=1.0, ls="--", zorder=4,
+                             label="p_HF_i Eingang [bara]")
         if "dp_HF_bar" in df_dat.columns:
             l_dp_dat, = ax2.plot(df_dat["Date"], df_dat["dp_HF_bar"],
                                  color=FARBE_DP_DAT, lw=1.0, ls=":", zorder=4,
@@ -271,12 +286,18 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     ax1.set_ylim(y1lo - y1r * 0.05, y1hi + y1r * 0.35)
     if not df_dat.empty:
         y2v = []
-        for _, _, _, seg in segs:
-            for c in ["p_HF_i_CL_AI [bara]","p_HF_o_CL_AI [bara]","dp_HF_bar"]:
-                if c in seg.columns: y2v.extend(seg[c].dropna())
+        for c in ["p_HF_i_CL_AI [bara]", "p_HF_o_CL_AI [bara]", "dp_HF_bar"]:
+            if c in df_dat.columns: y2v.extend(df_dat[c].dropna())
         if y2v:
             y2hi = max(y2v)
-            ax2.set_ylim(0, y2hi * 1.1)
+            if y1r > 0 and y2hi > 0:
+                # Nullpunkt von Y2 auf gleiche Position wie Nullpunkt von Y1 setzen
+                # Y1: Null liegt bei (0 - y1lo) / y1r * Achsenhöhe
+                # Y2 muss gleich skaliert werden
+                y1_total = y1hi + y1r * 0.35 - y1lo + y1r * 0.05
+                null_anteil = (0 - y1lo + y1r * 0.05) / y1_total
+                y2_total = y2hi * 1.1 / (1 - null_anteil)
+                ax2.set_ylim(-y2_total * null_anteil, y2_total * (1 - null_anteil))
 
     # Y4 rechts außen: Kv [m³/h]
     ax4 = ax1.twinx()
@@ -303,12 +324,12 @@ def plot_kombiniert(txt_pfad, dat_ordner):
         fr_mean = (100 - seg["Fr_Mix_CL_AI [%]"].mean()) if "Fr_Mix_CL_AI [%]" in seg.columns and len(seg) > 0 else float("nan")
 
         eintraege = []
-        if not np.isnan(Q_mean):  eintraege.append((f"Q̄={Q_mean:.0f} l/h",     FARBE_DURCHFLUSS))
+        if not np.isnan(Q_mean):  eintraege.append((f"Q̄={Q_mean:.3f} m³/h",     FARBE_DURCHFLUSS))
         if not np.isnan(dp_mean): eintraege.append((f"dp̄={dp_mean:.3f} bar",   FARBE_DP_DAT))
         if not np.isnan(kv_mean): eintraege.append((f"kv̄={kv_mean:.3f} m³/h", FARBE_KV))
         if not np.isnan(fr_mean): eintraege.append((f"Fr̄={fr_mean:.1f}%",      FARBE_FR))
 
-        seg_offset  = BLOCK_OFFSET_SEG.get(i, None)
+        seg_offset  = BLOCK_OFFSET_SEG.get(i + 1, None)
         offset_wert = seg_offset if seg_offset is not None else BLOCK_OFFSET
         y_anker_seg = y_bottom + y_range * np.clip(offset_wert, 0.0, 0.98)
         t_mid = s0 + (s1 - s0) / 2
@@ -397,7 +418,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     ax_kv.set_ylabel("Kv-Wert [m³/h]", color="#1565C0", fontsize=11)
     ax_kv.tick_params(axis="y", labelcolor="#1565C0")
     ax_kv.grid(True, ls="-", color="white", alpha=0.5, lw=0.5)
-    ax_kv.set_title("Kv-Kennlinie Kühlwasser-Mischventil", fontsize=12, pad=10)
+    ax_kv.set_title("Kv-Kennlinie Kühlwasser-Mischventil Schrägsitzventil DN25 (rotguß)", fontsize=12, pad=10)
     ax_kv.legend(fontsize=9, loc="upper left")
     plt.tight_layout()
 
