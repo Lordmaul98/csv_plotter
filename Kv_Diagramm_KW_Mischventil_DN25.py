@@ -251,7 +251,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     fig.patch.set_facecolor("#d0d0d0")
     ax1.set_facecolor("#d0d0d0")
 
-    # Y1 links: Durchfluss [l/h]
+    # Y1 links: Durchfluss [m³/h]
     ax1.set_ylabel("Durchfluss [m³/h]", color=FARBE_DURCHFLUSS, fontsize=10)
     ax1.tick_params(axis="y", labelcolor=FARBE_DURCHFLUSS)
     l_Q, = ax1.plot(df_csv["Zeitstempel"], df_csv["Durchfluss"],
@@ -259,7 +259,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
 
     # Y2 links versetzt: Druck [barg / bara]
     ax2 = ax1.twinx()
-    ax2.spines["left"].set_position(("outward", 72))
+    ax2.spines["left"].set_position(("outward", 60))
     ax2.yaxis.set_label_position("left")
     ax2.yaxis.set_ticks_position("left")
     ax2.set_ylabel("Druck [bar / bara]", color=FARBE_P_I, fontsize=10)
@@ -301,7 +301,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
 
     # Y4 rechts außen: Kv [m³/h]
     ax4 = ax1.twinx()
-    ax4.spines["right"].set_position(("outward", 60))
+    ax4.spines["right"].set_position(("outward", 0))
     ax4.set_ylabel("Kv-Wert [m³/h]", color=FARBE_KV, fontsize=10)
     ax4.tick_params(axis="y", labelcolor=FARBE_KV)
     l_kv = None
@@ -341,7 +341,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
 
     # Y5 rechts weiter außen: Öffnungswinkel [%]
     ax5 = ax1.twinx()
-    ax5.spines["right"].set_position(("outward", 125))
+    ax5.spines["right"].set_position(("outward", 60))
     ax5.set_ylabel("Öffnungswinkel [%]", color=FARBE_FR, fontsize=10)
     ax5.tick_params(axis="y", labelcolor=FARBE_FR)
     ax5.set_ylim(-5, 110)
@@ -377,7 +377,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
                ncol=5, fontsize=8.5, framealpha=0.88)
 
     ax1.grid(True, ls="-", color="white", alpha=0.35, lw=0.5)
-    plt.title(f"Berechnung Kv-Wert Mischventil | {len(segs)} Segmente | 0,5 Umdrehungen",
+    plt.title(f"Berechnung Kv-Wert Mischventil | {len(segs)} Segmente | 1,25 Umdrehungen",
               fontsize=11, pad=10)
     plt.subplots_adjust(left=0.08, right=0.88, top=0.92, bottom=0.12)
 
@@ -418,7 +418,7 @@ def plot_kombiniert(txt_pfad, dat_ordner):
     ax_kv.set_ylabel("Kv-Wert [m³/h]", color="#1565C0", fontsize=11)
     ax_kv.tick_params(axis="y", labelcolor="#1565C0")
     ax_kv.grid(True, ls="-", color="white", alpha=0.5, lw=0.5)
-    ax_kv.set_title("Kv-Kennlinie Kühlwasser-Mischventil Schrägsitzventil DN25 (rotguß)", fontsize=12, pad=10)
+    ax_kv.set_title("Kv-Kennlinie Mix_CL Schrägsitzventil DN25 (rotguß) 1,25 Umdr.", fontsize=12, pad=10)
     ax_kv.legend(fontsize=9, loc="upper left")
     plt.tight_layout()
 
