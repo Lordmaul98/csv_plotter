@@ -16,7 +16,7 @@ def berechne_coflow_profile(T_h_in, T_h_out, T_c_in, T_c_out, punkte=100):
 
     x = np.linspace(0, 1, punkte)
 
-    # Berechnung der LMTD für Gleichstrom
+    # Berechnung der Logarithmic Mean Temperature Difference (LMTD) für Gleichstrom
     if np.isclose(dT_max, dT_min):
         lmtd = dT_max
         T_h = np.full_like(x, T_h_in)
@@ -24,19 +24,19 @@ def berechne_coflow_profile(T_h_in, T_h_out, T_c_in, T_c_out, punkte=100):
     else:
         lmtd = (dT_max - dT_min) / np.log(dT_max / dT_min)
 
-        dQ_total_h = T_h_in - T_h_out
-        dQ_total_c = T_c_out - T_c_in
+        dT_h = T_h_in - T_h_out
+        dT_c = T_c_out - T_c_in
 
-        # NTU für Gleichstrom hergeleitet aus der Bilanz
-        NTU_gesamt = np.log(dT_max / dT_min)
+        # Abfallfaktor kappa für die exponentielle Abnahme der Temperaturdifferenz entlang des Wärmetauschers
+        Abfallfaktor_kappa = np.log(dT_max / dT_min)
 
         # Lokaler Abfall der treibenden Temperaturdifferenz: dT(x) = T_h(x) - T_c(x)
-        dT_x = dT_max * np.exp(-NTU_gesamt * x)
+        dT_x = dT_max * np.exp(-Abfallfaktor_kappa * x)
 
-        gesamt_delta = dQ_total_h + dQ_total_c
+        gesamt_delta = dT_h + dT_c
 
-        T_h = T_h_in - (dQ_total_h / gesamt_delta) * (dT_max - dT_x)
-        T_c = T_c_in + (dQ_total_c / gesamt_delta) * (dT_max - dT_x)
+        T_h = T_h_in - (dT_h / gesamt_delta) * (dT_max - dT_x)
+        T_c = T_c_in + (dT_c / gesamt_delta) * (dT_max - dT_x)
 
     return x, T_h, T_c, lmtd, dT_max, dT_min
 
@@ -45,15 +45,15 @@ def berechne_coflow_profile(T_h_in, T_h_out, T_c_in, T_c_out, punkte=100):
 # EINSTELLBARE PARAMETER (Betriebspunkte für CO-FLOW)
 # =============================================================================
 # Temperaturen in °C
-T_warm_ein = 70.4
-T_warm_aus = 63.5
-T_kalt_ein = 22.9
-T_kalt_aus = 62.2
+T_warm_ein = 70.0
+T_warm_aus = 70.0
+T_kalt_ein = 25.3
+T_kalt_aus = 62.5
 
 # Strömungs- und Stoffdaten (Beispielhaft für die heiße Seite)
-volumenstrom_h = 10.62  # in m³/h
-dichte_h = 977.76  # in kg/m³ (Wasser bei ~70°C)
-cp_h = 4185.0  # in J/(kg*K) (spezifische Wärmekapazität)
+volumenstrom_luft = 4086  # in dm³/min
+dichte_luft = 1.17  # in kg/m³ (Luft bei ~25°C)
+cp_luft = 1006.7  # in J/(kg*K) (spezifische Wärmekapazität)
 # =============================================================================
 
 try:
@@ -61,8 +61,8 @@ try:
     x, T_hot, T_cold, lmtd, dT_max, dT_min = berechne_coflow_profile(T_warm_ein, T_warm_aus, T_kalt_ein, T_kalt_aus)
 
     # 2. Berechnung von Massenstrom, Wärmestrom und thermischem Leitwert G
-    massenstrom_h = (volumenstrom_h / 3600.0) * dichte_h  # Umrechnung m³/h -> kg/s
-    Q_punkt = massenstrom_h * cp_h * (T_warm_ein - T_warm_aus)  # Wärmeleistung in W
+    massenstrom_luft = (volumenstrom_luft / 60000.0) * dichte_luft  # Umrechnung dm³/min -> kg/s
+    Q_punkt = massenstrom_luft * cp_luft * (T_kalt_aus - T_kalt_ein)  # Wärmeleistung in W
     G_wert = Q_punkt / lmtd  # Leitwert in W/K
 
     # Konsolenausgabe
@@ -70,15 +70,15 @@ try:
     print(f"ΔT_max (Eintritt Links):  {dT_max:6.2f} K")
     print(f"ΔT_min (Austritt Rechts): {dT_min:6.2f} K")
     print(f"LMTD (ΔT_ln):             {lmtd:6.2f} K")
-    print(f"Massenstrom (heiß):       {massenstrom_h:6.4f} kg/s")
-    print(f"Wärmestrom (Q_punkt):     {Q_punkt:6.1f} W")
+    print(f"Massenstrom (Luft):       {massenstrom_luft:6.2f} kg/s")
+    print(f"Wärmestrom (Q_punkt):     {Q_punkt:6.2f} W")
     print(f"Thermischer Leitwert G:   {G_wert:6.2f} W/K")
 
     # Graphische Darstellung
     plt.figure(figsize=(10, 6))
 
-    plt.plot(x, T_hot, 'r-', linewidth=2.5, label='Heißer Kreis (Fluid 1)')
-    plt.plot(x, T_cold, 'b-', linewidth=2.5, label='Kalter Kreis (Fluid 2)')
+    plt.plot(x, T_hot, 'r-', linewidth=2.5, label='Heißer Kreis (Fluid)')
+    plt.plot(x, T_cold, 'b-', linewidth=2.5, label='Kalter Kreis (Gas)')
 
     # Pfeile für Strömungsrichtung
     plt.annotate('', xy=(0.55, T_hot[55]), xytext=(0.45, T_hot[45]),
@@ -98,7 +98,7 @@ try:
              bbox=dict(facecolor='white', alpha=0.7), va='center')
     plt.text(0.40, y_text_pos,
              r'$\Delta T_{\ln}$ = ' + f'{lmtd:.1f} K\n' +
-             r'$\dot{V}$ = ' + f'{volumenstrom_h:.1f} m³/h\n' +
+             r'$\dot{V}$ = ' + f'{volumenstrom_luft:.1f} dm³/min\n' +
              r'$\dot{Q}$ = ' + f'{Q_punkt:.1f} W\n' +
              r'$G$ = ' + f'{G_wert:.1f} W/K',
              fontsize=10, bbox=dict(facecolor='white', alpha=0.7), va='center', ha='left')
